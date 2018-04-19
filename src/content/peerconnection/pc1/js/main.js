@@ -69,14 +69,20 @@ function gotStream(stream) {
 function start() {
   trace('Requesting local stream');
   startButton.disabled = true;
-  navigator.mediaDevices.getUserMedia({
-    audio: true,
-    video: true
-  })
-  .then(gotStream)
-  .catch(function(e) {
-    alert('getUserMedia() error: ' + e.name);
-  });
+  
+  getScreenConstraints(function(error, screen_constraints) {
+    if (error) {
+        return alert(error);
+    }
+
+    navigator.mediaDevices.getUserMedia({
+        video: screen_constraints
+    })
+    .then(gotStream)
+    .catch(function(e) {
+      alert('getUserMedia() error: ' + e.name);
+    });
+  });  
 }
 
 function call() {
