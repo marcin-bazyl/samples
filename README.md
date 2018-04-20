@@ -1,99 +1,44 @@
 [![Build Status](https://travis-ci.org/webrtc/samples.svg?branch=gh-pages)](https://travis-ci.org/webrtc/samples/)
 
-# WebRTC code samples #
+# Fork of WebRTC code samples #
 
-This is a repository for the WebRTC Javascript code samples.
+## This fork has been created to show a desktop share video quality problem in Chrome ##
 
-Some of the samples use new browser features. They may only work in Chrome Canary and/or Firefox Beta, and may require flags to be set.
+The modifications are done to the "Basic peer connection demo" sample (samples/src/content/peerconnection/pc1/):
 
-All of the samples use [adapter.js](https://github.com/webrtc/adapter), a shim to insulate apps from spec changes and prefix differences. In fact, the standards and protocols used for WebRTC implementations are highly stable, and there are only a few prefixed names. For full interop information, see [webrtc.org/web-apis/interop](http://www.webrtc.org/web-apis/interop).
+* desktop share is done instead of camera capture
+* use of h.264 is forced instead of VP8 by modifying the SDP
 
-In Chrome and Opera, all samples that use `navigator.mediaDevices.getUserMedia()` must be run from a server. Calling `navigator.mediaDevices.getUserMedia()` from a file:// URL will work in Firefox, but fail silently in Chrome and Opera.
+These modifications are meant to prove that there is a problem with desktop sharing video quality in Chrome on Windows when hardware acceleration is enabled and H264 encoder is used. The modifications to the code are specific to Chrome (there are hardcoded assumptions about the RTP payload types that match values used by Chrome), so it only makes sense to run this code in Chrome.
 
-[webrtc.org/testing](http://www.webrtc.org/testing) lists command line flags useful for development and testing with Chrome.
+To do the desktop capture I've used Screen-Capturing.js from https://github.com/muaz-khan/WebRTC-Experiment/blob/master/Chrome-Extensions/Screen-Capturing.js/Screen-Capturing.js and the Chrome extension from https://github.com/muaz-khan/WebRTC-Experiment/tree/master/Chrome-Extensions/desktopCapture
 
-For more information about WebRTC, we maintain a list of [WebRTC Resources](https://docs.google.com/document/d/1idl_NYQhllFEFqkGQOLv8KBK8M3EVzyvxnKkHl4SuM8/edit). If you've never worked with WebRTC, we recommend you start with the 2013 Google I/O [WebRTC presentation](http://www.youtube.com/watch?v=p2HzZkd2A40).
+Desktop sharing requires a Chrome extension and an https connection to work. Therefore, to use this sample, the following setup is needed:
 
-Patches and issues welcome! See [CONTRIBUTING](https://github.com/webrtc/samples/blob/gh-pages/CONTRIBUTING.md) for instructions. All contributors must sign a contributor license agreement before code can be accepted. Please complete the agreement for an [individual](https://developers.google.com/open-source/cla/individual) or a [corporation](https://developers.google.com/open-source/cla/corporate) as appropriate.
-The [Developer's Guide](https://bit.ly/webrtcdevguide) for this repo has more information about code style, structure and validation.
-Head over to [test/README.md](https://github.com/webrtc/samples/blob/gh-pages/test/README.md) and get started developing.
+1. Create an https server using Node.js running on your localhost.
+ * I've used the script from here: https://gist.github.com/bencentra/909830fb705d5892b9324cffbca3926f (follow the instructions from the script to create the key and certificate: key.pem and cert.pem files)
+ * Place the git clone of this fork of WebRTC code samples into the "dist" subfolder
+ * install dependencies:
+ ````
+ npm install express
+ ````
+ * and run the script:
+ ````
+ node server.js
+ ````
+2. Install the Chrome extension
+ * I've used the one from https://github.com/muaz-khan/WebRTC-Experiment/tree/master/Chrome-Extensions/desktopCapture
+ * Remember to change line 17 of manifest file to say:
+ ````
+ "matches": ["https://localhost/*"]
+ ````
+ * Use Chrome's "load unpacked" option to load the extension
 
-## The demos ##
+Once the above setup is done, the issue can be reproduced by folowing the steps:
 
-### getUserMedia ###
+1. Make sure you're using Windows 10 on a modern laptop that has graphics acceleration and the "Use hardware acceleration when available" setting is enabled in Chrome.
+2. Open Chrome version 65.0.3325.181 and point it to https://localhost:8443/samples/src/content/peerconnection/pc1/
+3. Scroll down and click the "Start" button - a dialog box will apear asking which screen you want to share (it's best to share a second screen, not the one you're viewing the page on), the desktop share should appear in the top video element on the page
+4. Click the "Call" button - the same shared desktop content should appear in the bottom video element of the page
+5. Move some windows around the shared screen, minimise them, maximise them. Observe that as the shared screen content changes with time the quality in the bottom video element keeps getting worse and worse.
 
-[Basic getUserMedia demo](https://webrtc.github.io/samples/src/content/getusermedia/gum/)
-
-[getUserMedia + canvas](https://webrtc.github.io/samples/src/content/getusermedia/canvas/)
-
-[getUserMedia + canvas + CSS Filters](https://webrtc.github.io/samples/src/content/getusermedia/filter/)
-
-[getUserMedia with resolution constraints](https://webrtc.github.io/samples/src/content/getusermedia/resolution/)
-
-[getUserMedia with camera, mic and speaker selection](https://webrtc.github.io/samples/src/content/getusermedia/source/)
-
-[Audio-only getUserMedia output to local audio element](https://webrtc.github.io/samples/src/content/getusermedia/audio/)
-
-[Audio-only getUserMedia displaying volume](https://webrtc.github.io/samples/src/content/getusermedia/volume/)
-
-[Record stream](https://webrtc.github.io/samples/src/content/getusermedia/record/)
-
-### Stream capture ###
-
-<!-- [Stream from a video element to a peer connection](https://webrtc.github.io/samples/src/content/capture/video-pc/) -->
-
-[Stream from a canvas element to a video element](https://webrtc.github.io/samples/src/content/capture/canvas-video/)
-
-[Stream from a canvas element to a peer connection](https://webrtc.github.io/samples/src/content/capture/canvas-pc/)
-
-<!-- [Record a stream from a canvas element](https://webrtc.github.io/samples/src/content/capture/canvas-record/) -->
-
-### Devices ###
-
-[Select camera, microphone and speaker](https://webrtc.github.io/samples/src/content/devices/input-output/)
-
-[Select media source and audio output](https://webrtc.github.io/samples/src/content/devices/multi/)
-
-### RTCPeerConnection ###
-
-[Basic peer connection](https://webrtc.github.io/samples/src/content/peerconnection/pc1/)
-
-[Audio-only peer connection](https://webrtc.github.io/samples/src/content/peerconnection/audio/)
-
-[Multiple peer connections at once](https://webrtc.github.io/samples/src/content/peerconnection/multiple/)
-
-[Forward output of one peer connection into another](https://webrtc.github.io/samples/src/content/peerconnection/multiple-relay/)
-
-[Munge SDP parameters](https://webrtc.github.io/samples/src/content/peerconnection/munge-sdp/)
-
-[Use pranswer when setting up a peer connection](https://webrtc.github.io/samples/src/content/peerconnection/pr-answer/)
-
-[Adjust constraints, view stats](https://webrtc.github.io/samples/src/content/peerconnection/constraints/)
-
-[Display createOffer output](https://webrtc.github.io/samples/src/content/peerconnection/create-offer/)
-
-[Use RTCDTMFSender](https://webrtc.github.io/samples/src/content/peerconnection/dtmf/)
-
-[Display peer connection states](https://webrtc.github.io/samples/src/content/peerconnection/states/)
-
-[ICE candidate gathering from STUN/TURN servers](https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/)
-
-[Do an ICE restart](https://webrtc.github.io/samples/src/content/peerconnection/restart-ice/)
-
-[Web Audio output as input to peer connection](https://webrtc.github.io/samples/src/content/peerconnection/webaudio-input/)
-
-[Peer connection as input to Web Audio](https://webrtc.github.io/samples/src/content/peerconnection/webaudio-output/)
-
-### RTCDataChannel ###
-
-[Transmit text](https://webrtc.github.io/samples/src/content/datachannel/basic/)
-
-[Transfer a file](https://webrtc.github.io/samples/src/content/datachannel/filetransfer/)
-
-[Transfer data](https://webrtc.github.io/samples/src/content/datachannel/datatransfer/)
-
-### Video chat ###
-
-[AppRTC video chat client](https://apprtc.appspot.com/) powered by Google App Engine
-
-[AppRTC URL parameters](https://apprtc.appspot.com/params.html)
