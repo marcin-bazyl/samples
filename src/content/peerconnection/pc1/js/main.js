@@ -185,8 +185,51 @@ function gotRemoteStream(e) {
   }
 }
 
+function modifySdpToForceH264(originalDesc) {
+  const sdpLines      = originalDesc.sdp.split('\r\n');
+  const newSdp        = [];
+  const H264_RTP_PAYLOAD_TYPE = '100';
+  const VP8_RTP_PAYLOAD_TYPE = '96';
+  const IDX_OF_FIRST_RTP_PAYLOAD_TYPE_IN_M_LINE = 3;
+  
+  console.log('Trying to force the use of h264 by modifying the SDP...');
+  
+  for (let i = 0; i < sdpLines.length; i++) {
+    const currentLine = sdpLines[i];
+    
+    if (currentLine.startsWith('m=video ')) {
+      const mVideoLineArray = currentLine.split(' ');
+      let indexOfH264 = -1;
+      for (let x = 0; x < mVideoLineArray.length; x++) {
+        if (mVideoLineArray[x] === H264_RTP_PAYLOAD_TYPE) {
+          indexOfH264 = x;
+          break;
+        }
+      }
+      if (indexOfH264 >= 0) {
+        console.log('found h264 at index %s, swapping...', indexOfH264);
+        mVideoLineArray[IDX_OF_FIRST_RTP_PAYLOAD_TYPE_IN_M_LINE] = H264_RTP_PAYLOAD_TYPE; /* put h264 in front */
+        mVideoLineArray[indexOfH264] = VP8_RTP_PAYLOAD_TYPE;
+      }
+      let newLine = mVideoLineArray.join(' ');
+      newSdp.push(newLine);
+    }
+    else {
+      newSdp.push(currentLine);
+    }
+    
+  }
+
+  let newDesc = originalDesc;
+  newDesc.sdp = newSdp.join('\r\n');
+  
+  return newDesc;
+}
+
 function onCreateAnswerSuccess(desc) {
   trace('Answer from pc2:\n' + desc.sdp);
+  desc = modifySdpToForceH264(desc)
+  trace('Modified answer from pc2:\n' + desc.sdp); 
   trace('pc2 setLocalDescription start');
   pc2.setLocalDescription(desc).then(
     function() {
